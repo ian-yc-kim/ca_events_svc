@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "ca-events-svc"
+version = "0.1.0"
+description = "Calendar App events-service (FastAPI scaffold)"
+authors = ["Calendar App Team <devnull@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.116.1"
+pydantic = "^2.11.7"
+uvicorn = {extras = ["standard"], version = "^0.35.0"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
