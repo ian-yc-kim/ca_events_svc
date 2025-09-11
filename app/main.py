@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.config import get_settings
 from app.routers import events_router
+from app.db.session import engine, SessionLocal, dispose_engine
 
 
 def create_app(env: str | None = None) -> FastAPI:
@@ -31,7 +32,19 @@ def create_app(env: str | None = None) -> FastAPI:
     # Attach settings to app state for global access
     app.state.settings = settings
 
+    # Attach DB engine and sessionmaker to app state
+    app.state.db_engine = engine
+    app.state.session_maker = SessionLocal
+
     app.include_router(events_router, prefix="/events", tags=["events"])  # placeholder router
+
+    @app.on_event("shutdown")
+    def _shutdown_db() -> None:
+        try:
+            dispose_engine()
+        except Exception as e:  # pragma: no cover - defensive
+            import logging
+            logging.error(e, exc_info=True)
 
     return app
 
