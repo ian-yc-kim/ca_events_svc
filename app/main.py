@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
 from app.config import get_settings
 from app.routers import events_router
 from app.db.session import engine, SessionLocal, dispose_engine
+from app.exceptions import (
+    EventBaseError,
+    EventNotFoundError,
+    EventValidationError,
+    EventBusinessRuleError
+)
+from app.error_handlers import (
+    handle_event_not_found_error,
+    handle_event_validation_error,
+    handle_event_business_rule_error,
+    handle_event_base_error,
+    handle_request_validation_error,
+    handle_generic_exception
+)
 
 
 def create_app(env: str | None = None) -> FastAPI:
@@ -28,6 +43,14 @@ def create_app(env: str | None = None) -> FastAPI:
     debug = settings.app_env == "development"
 
     app = FastAPI(title="events-service", version="0.1.0", debug=debug)
+
+    # Register exception handlers in order: most specific first, generic last
+    app.add_exception_handler(EventNotFoundError, handle_event_not_found_error)
+    app.add_exception_handler(EventValidationError, handle_event_validation_error)
+    app.add_exception_handler(EventBusinessRuleError, handle_event_business_rule_error)
+    app.add_exception_handler(EventBaseError, handle_event_base_error)
+    app.add_exception_handler(RequestValidationError, handle_request_validation_error)
+    app.add_exception_handler(Exception, handle_generic_exception)
 
     # Attach settings to app state for global access
     app.state.settings = settings
